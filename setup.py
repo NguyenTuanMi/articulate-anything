@@ -28,6 +28,7 @@ INSTALL_REQUIRES = [
     'openai',
     'anthropic',
     'moviepy',
+    'json-repair'
     # 'gradio @ git+https://github.com/gradio-app/gradio.git@main', ## gradio 5.0-dev has video gallery support
     # see: https://github.com/gradio-app/gradio/pull/9052
 ]

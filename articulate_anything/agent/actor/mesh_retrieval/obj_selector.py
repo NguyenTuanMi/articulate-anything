@@ -12,6 +12,7 @@ import os
 from articulate_anything.utils.partnet_utils import track_obj_types
 from articulate_anything.agent.agent import Agent
 from articulate_anything.utils.viz import get_frames_from_video, display_frames
+from json_repair import repair_json
 
 OBJECT_SELECTION_INSTRUCTION = """
 You will be presented with a target image and a set of candidate images. Your task is to select the candidate image that is most similar to the target image in terms of the object depicted.
@@ -37,6 +38,16 @@ json
 where X is the number of the selected image (0, 1, 2, 3, etc.). 
 """
 
+import re
+
+def _repair_json(json_str: str) -> str:
+    """
+    VLMs frequently emit trailing commas before a closing } or ] —
+    invalid per strict JSON, but common in LLM output. Strip them.
+    """
+    # Remove a comma that's followed (after whitespace/newlines) by } or ]
+    return re.sub(r",\s*([}\]])", r"\1", json_str)
+
 class ObjectSelector(Agent):
     OUT_RESULT_PATH = "object_selector_result.json"
 
@@ -55,7 +66,7 @@ class ObjectSelector(Agent):
     def parse_response(self, response, **kwargs):
         json_str = response.text.strip().strip('```json').strip()
         print("json_str:", json_str)
-        parsed_response = json.loads(json_str, strict=False)
+        parsed_response = json.loads(repair_json(json_str), strict=False)
         logging.info(f"Object selector response: {parsed_response}")
         save_json(parsed_response, join_path(
             self.cfg.out_dir, self.OUT_RESULT_PATH))
